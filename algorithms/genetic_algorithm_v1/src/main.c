@@ -6,10 +6,20 @@
 
 int main(void) {
   List *Queue = NULL;
-
+  int targetedValue;
   int choice = menu_controls();
 
-  printf("choice: %d", choice);
+  if (choice == 1)
+    prepare_automatic_set(&Queue, &targetedValue);
+  else {
+    prepare_manuel_set(&Queue, &targetedValue);
+  }
+
+  // List *temp = Queue;
+  // while (temp != NULL) {
+  //   printf("\n%d", temp->data);
+  //   temp = temp->next;
+  // }
 
   free_list(Queue);
 
