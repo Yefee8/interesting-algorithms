@@ -6,7 +6,8 @@ typedef struct List {
   struct List *next;
 } List;
 
-void push_with_order(List **activeQueue, int data);
-void free_list(List *head);
+void push_with_order(List **set, int data);
+int find_data_by_index(List *list, int index);
+void free_set(List *head);
 
 #endif

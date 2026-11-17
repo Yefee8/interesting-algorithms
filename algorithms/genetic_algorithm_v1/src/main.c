@@ -21,7 +21,7 @@ int main(void) {
   //   temp = temp->next;
   // }
 
-  free_list(Queue);
+  free_set(Queue);
 
   return 0;
 }

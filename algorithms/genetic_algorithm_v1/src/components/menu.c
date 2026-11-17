@@ -39,13 +39,13 @@ int menu_controls(void) {
   return 0;
 }
 
-void prepare_manuel_set(List **queue, int *targeted_value) {
+void prepare_manuel_set(List **set, int *targeted_value) {
   int scanned_value = 0;
   do {
     printf("\nNumber that you want in the set(write 0 to stop): ");
     scanf(" %d", &scanned_value);
     if (scanned_value != 0)
-      push_with_order(queue, scanned_value);
+      push_with_order(set, scanned_value);
   } while (scanned_value != 0);
   printf("\nTargeted Value: ");
   scanf(" %d", targeted_value);

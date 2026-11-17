@@ -5,6 +5,6 @@
 
 extern int testCases[10][100];
 
-void prepare_automatic_set(List **activeQueue, int *opt);
+void prepare_automatic_set(List **set, int *target);
 
 #endif

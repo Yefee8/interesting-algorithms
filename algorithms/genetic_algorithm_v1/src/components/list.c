@@ -1,7 +1,7 @@
 #include "list.h"
 #include <stdlib.h>
 
-void push_with_order(List **activeQueue, int data) {
+void push_with_order(List **set, int data) {
   List *newItem = calloc(1, sizeof(List));
 
   if (newItem == NULL)
@@ -10,12 +10,12 @@ void push_with_order(List **activeQueue, int data) {
   newItem->data = data;
   newItem->next = NULL;
 
-  if (*activeQueue == NULL) {
-    *activeQueue = newItem;
+  if (*set == NULL) {
+    *set = newItem;
     return;
   }
 
-  List *temp = *activeQueue;
+  List *temp = *set;
   List *lastItem = NULL;
 
   while (temp != NULL) {
@@ -25,7 +25,7 @@ void push_with_order(List **activeQueue, int data) {
       if (lastItem != NULL)
         lastItem->next = newItem;
       else
-        *activeQueue = newItem;
+        *set = newItem;
 
       return;
     }
@@ -37,10 +37,22 @@ void push_with_order(List **activeQueue, int data) {
   lastItem->next = newItem;
 }
 
-void free_list(List *head) {
+void free_set(List *head) {
   while (head != NULL) {
     List *next = head->next;
     free(head);
     head = next;
   }
+}
+
+int find_data_by_index(List *list, int index) {
+  int i = 0;
+  List *temp = list;
+  if (temp == NULL)
+    return -1;
+  while (i != index) {
+    temp = temp->next;
+    i++;
+  }
+  return temp->data;
 }
