@@ -1,6 +1,13 @@
+# Ignore everything
 *
-!.gitkeep
+
+# Keep root files
 !.gitignore
-!algorithms
-!algorithms/*
 !README.md
+
+# Keep algorithms folder
+!algorithms/
+!algorithms/*
+# Keep genetic_algorithm* folders inside algorithms and everything inside them
+!algorithms/genetic_algorithm*/
+!algorithms/genetic_algorithm*/**
