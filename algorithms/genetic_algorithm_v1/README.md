@@ -1,8 +1,8 @@
 # How to run?
 ```bash
-make
-make run
-make clean
+make # for executable build
+make run # for executable build + execute
+make clean # remove the current build IF EXISTS and create a new build.
 ```
 and
 ```bash
