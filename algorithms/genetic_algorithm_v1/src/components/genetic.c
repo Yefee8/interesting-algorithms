@@ -62,42 +62,62 @@ void set_selection(SolutionSet **set, int *setLength,
   (*BeforeMiddle)->next = NULL;
 }
 
-// TODO: fix BeforeMiddle with a proper solution, do not travel all the set for
-// getting the item before the middle
-// currently it doesn't work, If I find a way to fix it in a proper way, I'll.
+// If we had prev in SolutionSet (double way linked list) it would be a O(1)
+// solution, but making/understanding this made me better.
+void update_before_middle(int setLength, int isBeforeOrEqual, SolutionSet **set,
+                          SolutionSet **BeforeMiddle) {
+  if (setLength == 2) {
+    *BeforeMiddle = *set;
+  } else if (isBeforeOrEqual == 0 && (setLength % 2 == 0)) {
+    *BeforeMiddle = (*BeforeMiddle)->next;
+  } else if (isBeforeOrEqual == 1 && (setLength % 2 == 1)) {
+    int targetIndex = (setLength / 2) - 1;
+    SolutionSet *temp = *set;
+    for (int i = 0; i < targetIndex; i++) {
+      temp = temp->next;
+    }
+    *BeforeMiddle = temp;
+  }
+}
+
 void push_solution_set_with_order(SolutionSet **set, Solution *new,
                                   int *setLength, SolutionSet **BeforeMiddle) {
   SolutionSet *temp = *set;
   SolutionSet *lastItem = NULL;
   SolutionSet *newItem =
-      calloc(sizeof(SolutionSet) - sizeof(Solution) + sizeof(*new), 1);
+      calloc(1, sizeof(SolutionSet) - sizeof(Solution) + sizeof(*new));
+
   if (newItem == NULL)
     exit(-1);
   (*setLength)++;
+  newItem->solution = *new;
+  newItem->next = NULL;
+
   if (*set == NULL) {
+    *BeforeMiddle = newItem;
     *set = newItem;
     return;
   }
-  int counter = 0;
-  newItem->solution = *new;
-  newItem->next = NULL;
-  while (temp != NULL) {
-    if (counter - 1 == *setLength / 2)
-      *BeforeMiddle = temp;
 
+  int isBeforeOrEqual =
+      newItem->solution.fitness >= (*BeforeMiddle)->solution.fitness ? 1 : 0;
+
+  while (temp != NULL) {
     if (newItem->solution.fitness >= temp->solution.fitness) {
       newItem->next = temp;
       if (lastItem != NULL)
         lastItem->next = newItem;
       else
         *set = newItem;
-      if (counter - 1 == *setLength / 2)
-        *BeforeMiddle = newItem;
+      update_before_middle(*setLength, isBeforeOrEqual, set, BeforeMiddle);
       return;
     }
+
     lastItem = temp;
     temp = temp->next;
-    counter++;
   }
+
   lastItem->next = newItem;
+
+  update_before_middle(*setLength, isBeforeOrEqual, set, BeforeMiddle);
 }
