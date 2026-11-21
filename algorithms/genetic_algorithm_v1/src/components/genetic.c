@@ -18,7 +18,8 @@ Solution *createSolution(int target, List *queue, int queueLength) {
   // max retry is 3. retry excuse: we can't always trust randominess I guess...
   int retry_count = 0;
   Solution *solution = calloc(sizeof(Solution), 1);
-
+  if (solution == NULL)
+    exit(-1);
   while (sum < target) {
     if (retry_count > 3)
       break;
@@ -134,23 +135,23 @@ Solution *pmx_set(int index1, int index2, SolutionSet *set, int target) {
 // If we had prev in SolutionSet (double way linked list) it would be a O(1)
 // solution, but making/understanding this made me better.
 void update_before_middle(int setLength, int isBeforeOrEqual, SolutionSet **set,
-                          SolutionSet **BeforeMiddle) {
+                          SolutionSet **Before_Middle) {
   if (setLength == 2) {
-    *BeforeMiddle = *set;
+    *Before_Middle = *set;
   } else if (isBeforeOrEqual == 0 && (setLength % 2 == 0)) {
-    *BeforeMiddle = (*BeforeMiddle)->next;
+    *Before_Middle = (*Before_Middle)->next;
   } else if (isBeforeOrEqual == 1 && (setLength % 2 == 1)) {
     int targetIndex = (setLength / 2) - 1;
     SolutionSet *temp = *set;
     for (int i = 0; i < targetIndex; i++) {
       temp = temp->next;
     }
-    *BeforeMiddle = temp;
+    *Before_Middle = temp;
   }
 }
 
 void push_solution_set_with_order(SolutionSet **set, Solution *new,
-                                  int *setLength, SolutionSet **BeforeMiddle) {
+                                  int *setLength, SolutionSet **Before_Middle) {
   SolutionSet *temp = *set;
   SolutionSet *lastItem = NULL;
   SolutionSet *newItem =
@@ -163,15 +164,15 @@ void push_solution_set_with_order(SolutionSet **set, Solution *new,
   newItem->next = NULL;
 
   if (*set == NULL) {
-    *BeforeMiddle = newItem;
+    *Before_Middle = newItem;
     *set = newItem;
     return;
   }
 
   int isBeforeOrEqual =
-      newItem->solution.fitness >= (*BeforeMiddle)->solution.fitness ? 1 : 0;
+      newItem->solution.fitness >= (*Before_Middle)->solution.fitness ? 1 : 0;
   if (isBeforeOrEqual == 0)
-    temp = *BeforeMiddle;
+    temp = *Before_Middle;
   while (temp != NULL) {
     if (newItem->solution.fitness >= temp->solution.fitness) {
       newItem->next = temp;
@@ -179,7 +180,7 @@ void push_solution_set_with_order(SolutionSet **set, Solution *new,
         lastItem->next = newItem;
       else
         *set = newItem;
-      update_before_middle(*setLength, isBeforeOrEqual, set, BeforeMiddle);
+      update_before_middle(*setLength, isBeforeOrEqual, set, Before_Middle);
       return;
     }
 
@@ -189,7 +190,7 @@ void push_solution_set_with_order(SolutionSet **set, Solution *new,
 
   lastItem->next = newItem;
 
-  update_before_middle(*setLength, isBeforeOrEqual, set, BeforeMiddle);
+  update_before_middle(*setLength, isBeforeOrEqual, set, Before_Middle);
 }
 
 // mutation
@@ -210,11 +211,11 @@ void mutation(List *list, Solution *set, int set_length, int target) {
 }
 
 // generate
-void generate_new_solutions(List *list, SolutionSet **set, int *setLength,
-                            int target, SolutionSet **BeforeMiddle,
-                            float mutationRatio, int set_length) {
+void generate_new_solutions(List *list, SolutionSet **set, int *set_length,
+                            int target, SolutionSet **Before_Middle,
+                            float mutation_ratio) {
   srand(time(NULL));
-  const int constantHalfSetLength = (*setLength);
+  const int constantHalfSetLength = (*set_length);
   int counter = 0;
   while (counter < constantHalfSetLength * 2) {
     counter++;
@@ -226,12 +227,12 @@ void generate_new_solutions(List *list, SolutionSet **set, int *setLength,
     Solution *pmx1 = pmx_set(parent1_index, parent2_index, *set, target);
     Solution *pmx2 = pmx_set(parent2_index, parent1_index, *set, target);
     int mutation_random = rand() % 99 + 1;
-    if ((int)mutationRatio * 100 == mutation_random)
-      mutation(list, pmx1, set_length, target);
-    push_solution_set_with_order(set, pmx1, setLength, BeforeMiddle);
+    if ((int)(mutation_ratio * 100) == mutation_random)
+      mutation(list, pmx1, *set_length, target);
+    push_solution_set_with_order(set, pmx1, set_length, Before_Middle);
     mutation_random = rand() % 99 + 1;
-    if ((int)mutationRatio * 100 == mutation_random)
-      mutation(list, pmx2, set_length, target);
-    push_solution_set_with_order(set, pmx2, setLength, BeforeMiddle);
+    if ((int)(mutation_ratio * 100) == mutation_random)
+      mutation(list, pmx2, *set_length, target);
+    push_solution_set_with_order(set, pmx2, set_length, Before_Middle);
   }
 }
