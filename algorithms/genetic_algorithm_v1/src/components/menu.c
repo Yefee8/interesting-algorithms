@@ -63,7 +63,7 @@ float ask_mutation_ratio(void) {
 
 int ask_generation_count(void) {
   int count;
-  printf("\nNumber of generations (0 to stop): ");
+  printf("\nNumber of simulations on the solution set (0 to stop): ");
   if (scanf(" %d", &count) != 1)
     return 0;
   return count;

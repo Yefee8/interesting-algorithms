@@ -6,11 +6,11 @@
 #include "list.h"
 #include "menu.h"
 
-void print_solutions(SolutionSet *set) {
+void print_solutions(SolutionSet *set, List *list) {
   for (SolutionSet *temp = set; temp != NULL; temp = temp->next) {
     printf("Fitness: %.3f, selected:", temp->solution.fitness);
     for (int i = 0; i < temp->solution.selected_length; i++)
-      printf(" %d", temp->solution.selected[i]);
+      printf(" %d", find_data_by_index(list, temp->solution.selected[i]));
     printf("\n");
   }
 }
@@ -54,7 +54,7 @@ int main(void) {
   }
 
   printf("\nInitial generation:\n");
-  print_solutions(set);
+  print_solutions(set, Queue);
 
   int generations;
   while ((generations = ask_generation_count()) != 0) {
@@ -67,7 +67,7 @@ int main(void) {
       generate_new_solutions(Queue, &set, &setLength, targetedValue,
                              &Before_Middle, mutation_ratio, generation_size);
     }
-    print_solutions(set);
+    print_solutions(set, Queue);
   }
 
   while (set != NULL) {

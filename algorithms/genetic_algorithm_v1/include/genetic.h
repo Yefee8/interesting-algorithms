@@ -6,7 +6,7 @@
 typedef struct Solution {
   float fitness;
   int selected_length;
-  int *selected;
+  int *selected; // Indices in the input list
 } Solution;
 
 typedef struct SolutionSet {

@@ -6,9 +6,15 @@ I tried to fix it on linked lists, using arrays(with bit values for solutions) w
 But using linked lists was on purpose, it was for learning.
 I'll write a better version of this, if there's a folder named genetic_algorithm_v2 in this repo, probably I've done it.
 
+# What does it do?
+temporary description
+
+# How does it work?
+temporary description
+
 # How to run?
 ```bash
 make # for executable build, after on that run ./genetic-algorithm to run the program.
 make run # for executable build + execute
-make clean # remove the current build IF EXISTS and create a new build, after on that run ./genetic-algorithm to run the program.
+make clean # remove the current build IF EXISTS.
 ```

@@ -4,15 +4,15 @@
 #include <stdlib.h>
 #include <time.h>
 
-float fitness(int target, int items_length, int items[items_length]) {
+float fitness(int target, List *list, int items_length, int items[items_length]) {
   int sum = 0;
   for (int i = 0; i < items_length; i++)
-    sum += items[i];
+    sum += find_data_by_index(list, items[i]);
   return (float)sum / target;
 }
 
 int find(int length, int target, int array[length]) {
-  for (int i = 0; i < length; length++)
+  for (int i = 0; i < length; i++)
     if (target == array[i])
       return 1;
   return 0;
@@ -21,37 +21,50 @@ int find(int length, int target, int array[length]) {
 Solution *createSolution(int target, List *queue, int queueLength) {
   int sum = 0;
   int count = 0;
-  int chosen_indexes[count];
   int random_index;
+  int checked = 0;
   // max retry is 3. retry excuse: we can't always trust randominess I guess...
   int retry_count = 0;
   Solution *solution = calloc(1, sizeof(Solution));
   if (solution == NULL)
     exit(-1);
-  while (sum < target) {
+  int *indexes = malloc(sizeof(int) * queueLength);
+  if (indexes == NULL) {
+    free(solution);
+    exit(-1);
+  }
+  for (int i = 0; i < queueLength; i++)
+    indexes[i] = i;
+  for (int i = queueLength - 1; i > 0; i--) {
+    int index = rand() % (i + 1);
+    int temp = indexes[i];
+    indexes[i] = indexes[index];
+    indexes[index] = temp;
+  }
+  while (sum < target && checked < queueLength) {
     if (retry_count > 3)
       break;
-    random_index = rand() % queueLength;
+    random_index = indexes[checked++];
     int selectedValue = find_data_by_index(queue, random_index);
-    if (find(count, random_index, chosen_indexes)) {
-    } else if (sum + selectedValue > target)
+    if (sum + selectedValue > target)
       retry_count++;
     else {
       count++;
       sum += selectedValue;
       int *temp = realloc(solution->selected, sizeof(int) * count);
       if (temp == NULL) {
+        free(indexes);
         free(solution->selected);
         free(solution);
         exit(-1);
       }
-      chosen_indexes[count - 1] = random_index;
       solution->selected = temp;
-      *(solution->selected + count - 1) = selectedValue;
+      *(solution->selected + count - 1) = random_index;
     }
   }
+  free(indexes);
   solution->selected_length = count;
-  solution->fitness = fitness(target, count, solution->selected);
+  solution->fitness = fitness(target, queue, count, solution->selected);
   return solution;
 }
 
@@ -77,7 +90,8 @@ void set_selection(SolutionSet **set, int *setLength,
 }
 
 // pmx crossover(not exactly i know...) - ONLY RETURNS 1 CHILD!
-Solution *pmx_set(int index1, int index2, SolutionSet *set, int target) {
+Solution *pmx_set(int index1, int index2, SolutionSet *set, int target,
+                  List *list) {
   int counter = 0;
   SolutionSet *temp1 = set;
   SolutionSet *temp2 = set;
@@ -118,15 +132,20 @@ Solution *pmx_set(int index1, int index2, SolutionSet *set, int target) {
           exit(-1);
         }
         newSolution->selected = temp;
-        sum += parent1.selected[i];
+        sum += find_data_by_index(list, parent1.selected[i]);
         *(newSolution->selected + count - 1) = parent1.selected[i];
         break;
       }
 
-  while (sum < target) {
+  int checked = 0;
+  int start_index = parent1.selected_length > 0 ? rand() % parent1.selected_length : 0;
+  while (sum < target && checked < parent1.selected_length) {
     if (retry_count > 3)
       break;
-    int selectedValue = parent1.selected[rand() % parent1.selected_length];
+    int selectedIndex = parent1.selected[(start_index + checked++) % parent1.selected_length];
+    int selectedValue = find_data_by_index(list, selectedIndex);
+    if (find(count, selectedIndex, newSolution->selected))
+      continue;
     if (sum + selectedValue > target)
       retry_count++;
     else {
@@ -140,12 +159,12 @@ Solution *pmx_set(int index1, int index2, SolutionSet *set, int target) {
       sum += selectedValue;
       newSolution->selected_length = count;
       newSolution->selected = temp;
-      *(newSolution->selected + count - 1) = selectedValue;
+      *(newSolution->selected + count - 1) = selectedIndex;
     }
   }
 
   newSolution->selected_length = count;
-  newSolution->fitness = fitness(target, count, newSolution->selected);
+  newSolution->fitness = fitness(target, list, count, newSolution->selected);
   return newSolution;
 }
 
@@ -216,13 +235,18 @@ void mutation(List *list, Solution *set, int set_length, int target) {
     return;
   int sum = 0;
   for (int i = 0; i < set->selected_length; i++)
-    sum += set->selected[i];
+    sum += find_data_by_index(list, set->selected[i]);
   int changedBit = rand() % set->selected_length;
   for (int i = 0; i < set_length * 2; i++) {
-    int value = find_data_by_index(list, rand() % set_length);
-    if (sum - set->selected[changedBit] + value <= target) {
-      set->selected[changedBit] = value;
-      set->fitness = fitness(target, set->selected_length, set->selected);
+    int index = rand() % set_length;
+    int value = find_data_by_index(list, index);
+    int oldValue = find_data_by_index(list, set->selected[changedBit]);
+    if (index != set->selected[changedBit] &&
+        find(set->selected_length, index, set->selected))
+      continue;
+    if (sum - oldValue + value <= target) {
+      set->selected[changedBit] = index;
+      set->fitness = fitness(target, list, set->selected_length, set->selected);
       break;
     }
   }
@@ -242,8 +266,8 @@ void generate_new_solutions(List *list, SolutionSet **set, int *set_length,
     do {
       parent2_index = rand() % constantHalfSetLength;
     } while (parent1_index == parent2_index);
-    Solution *pmx1 = pmx_set(parent1_index, parent2_index, *set, target);
-    Solution *pmx2 = pmx_set(parent2_index, parent1_index, *set, target);
+    Solution *pmx1 = pmx_set(parent1_index, parent2_index, *set, target, list);
+    Solution *pmx2 = pmx_set(parent2_index, parent1_index, *set, target, list);
     int mutation_random = rand() % 100 + 1;
     if (mutation_random <= mutation_ratio * 100)
       mutation(list, pmx1, list_length, target);
